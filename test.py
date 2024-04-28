@@ -11,14 +11,13 @@ import csv
 import pandas as pd
 
 # Chuỗi kết nối SQL Server
-server = 'job-hub-kltn.database.windows.net'
-database = 'job-hub-database'
-username = 'jobhub'
-password = '28072002Thanh'
-driver = '{ODBC Driver 17 for SQL Server}'
+server = 'abcdavid-knguyen.ddns.net'
+database = 'es_mssql2'
+username = 'sa'
+password = 'LHQuy12@306lkjh?'
 
 # Tạo chuỗi kết nối
-connection_string = f'DRIVER={driver};SERVER={server};DATABASE={database};UID={username};PWD={password}'
+connection_string = f'SERVER={server};DATABASE={database};UID={username};PWD={password}'
 
 # Kết nối đến cơ sở dữ liệu
 conn = pyodbc.connect(connection_string)
