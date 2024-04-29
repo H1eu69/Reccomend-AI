@@ -53,17 +53,18 @@ from scipy.sparse import csr_matrix
 from sklearn.neighbors import NearestNeighbors
 import pyodbc
 import csv
+import json
 
-def get_course_index_by_title(course_pivot, title):
+def get_course_index_by_title(course_pivot, course_id):
     try:
-        index = course_pivot.index.get_loc(title)
+        index = course_pivot.columns.get_loc(course_id)
         return index
     except KeyError:
-        print(f"The course with title '{title}' does not exist in course_pivot.")
+        print(f"The course with title '{course_id}' does not exist in course_pivot.")
         return -1
 
 
-def get_dataframe_ratings_base():
+def get_dataframe_ratings_base(id):
     conn_str = (
         r"DRIVER={ODBC Driver 17 for SQL Server};"
         r"Server=abcdavid-knguyen.ddns.net,30009;"
@@ -83,10 +84,14 @@ def get_dataframe_ratings_base():
         # Don't forget to close the connection when done
         # SQL query to retrieve data
         courses_with_rate = pd.read_sql(sql_query, conn)
+        courses_with_rate.rename(columns={'Id': 'course_id'}, inplace=True)
+        courses_with_rate.rename(columns={'LearnerId': 'learner_id'}, inplace=True)
+
         sql_query = "SELECT * FROM Customer"
 
         # courses = pandas.read_csv('Courses.csv',usecols=[0, 1, 12] ,names=courses_cols,encoding='utf-8')
         users =  pd.read_sql(sql_query, conn)
+        users.rename(columns={'Id': 'user_id'}, inplace=True)
 
         conn.close()
         print("Connection closed successfully.")
@@ -96,39 +101,36 @@ def get_dataframe_ratings_base():
 
 
     print("Courses \n")
-    print(courses_with_rate.head(5))
+    print(courses_with_rate.info())
     print("user \n")
     print(users.head(5))
     print("rating before \n")
 
 
-    num_rating = courses_with_rate.groupby("Title")["Rate"].count().reset_index()
+    num_rating = courses_with_rate.groupby(["learner_id", "course_id"])["Rate"].count().reset_index()
     num_rating.rename(columns={"Rate" : "num_of_rating"}, inplace=True)
     print("num_rating \n")
     print(num_rating.head())
+    print(num_rating.info())
 
-    final_rating = courses_with_rate.merge(num_rating, on="Title")
+    final_rating = courses_with_rate.merge(num_rating, on="course_id")
     print("final_rating \n")
     print(final_rating.head())
     # final_rating = final_rating[final_rating["num_of_rating"] >= 50]
     # print("final_rating \n")
     # print(final_rating.head())
 
-    final_rating.drop_duplicates(["Id", "Title"], inplace=True)
-    print(final_rating.shape)
+    final_rating.drop_duplicates(["course_id", "Title"], inplace=True)
+    print(final_rating.info())
 
-    course_pivot = final_rating.pivot_table(columns="Id",index="Title", values = "Rate")
+    course_pivot = final_rating.pivot_table(columns="learner_id_x",index="course_id", values = "Rate")
     # course_pivot = course_pivot.transpose()
     print("course_pivot \n")
     # with pandas.option_context('display.max_rows', None, 'display.max_columns', None):
     print(course_pivot) 
     print(course_pivot.shape) 
-    # Print the userId column
-    print("User IDs:")
-    print(course_pivot['ID'])
 
-    course_title_to_find = "java Test"
-    course_index = get_course_index_by_title(course_pivot, course_title_to_find)
+    course_index = get_course_index_by_title(course_pivot, id)
     print(course_index)
 
     course_pivot.fillna(0, inplace=True)
@@ -138,17 +140,23 @@ def get_dataframe_ratings_base():
     model = NearestNeighbors(algorithm="brute")
     model.fit(course_sparse)
     distance, suggestion = model.kneighbors(course_pivot.iloc[course_index,:].values.reshape(1,-1), n_neighbors=9)
+    suggestion_ids = []
 
-    print(distance)
-    print(suggestion)
+    # print(distance)
+    # print(suggestion)
+    print(suggestion.tolist())
 
-    for i in range(len(suggestion)):
-        print(course_pivot.index[suggestion[i]])
+    for i in suggestion[0]:
+        suggestion_ids.append(course_pivot.index[i])
 
-    Y_data = courses_with_rate.values
+    # for i in range(len(suggestion)):
+    #     print(course_pivot.index[suggestion[i]])
+    #     suggestion_ids.append(course_pivot.index[suggestion[i]])
+
     # print("Y_data after \n")
     # print(Y_data)
-    return Y_data
+    print(suggestion_ids)
+    return json.dumps(suggestion_ids)
  
 # Y_data = get_dataframe_ratings_base()
 # rs = CF(Y_data, k = 10, uuCF = 0)
@@ -177,9 +185,10 @@ from flask import Flask, request, jsonify
 
 app = Flask(__name__)
 
-@app.route("/")
-def home():
-    return "Home"
+@app.route("/get_recommended_course/<id>")
+def get_recommended_courses(id):
+    data = get_dataframe_ratings_base(id)
+    return jsonify(data), 200
 
 if __name__ == "__main__":
     app.run(debug=True)
