@@ -1,0 +1,4 @@
+{
+    "appService.defaultWebAppToDeploy": "/subscriptions/a0cc88b9-f2c2-412b-91c5-fea99946c285/resourceGroups/Hieu/providers/Microsoft.Web/sites/recommendapis",
+    "appService.deploySubpath": "."
+}
