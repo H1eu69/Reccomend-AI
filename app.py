@@ -32,12 +32,19 @@ try:
     users =  pd.read_sql(sql_query, conn)
     users.rename(columns={'Id': 'user_id'}, inplace=True)
 
+    sql_query = "SELECT * FROM Subject"
+
+    # courses = pandas.read_csv('Courses.csv',usecols=[0, 1, 12] ,names=courses_cols,encoding='utf-8')
+    subjects =  pd.read_sql(sql_query, conn)
+
     conn.close()
     print("Connection closed successfully.")
     print("Courses \n")
     print(courses_with_rate.info())
     print("user \n")
     print(users.head(5))
+    print("subject \n")
+    print(subjects.head(5))
 except Exception as e:
     print("Error connecting to database:", e)
 
@@ -99,7 +106,12 @@ def get_dataframe_ratings_base(id):
         # print("Y_data after \n")
         # print(Y_data)
         print(suggestion_ids)
-        return suggestion_ids
+
+        suggestion_subject_names = [subjects.loc[subjects['Id'] == id, 'Name'].iloc[0] for id in suggestion_ids]
+
+        print(suggestion_subject_names)
+
+        return suggestion_subject_names
 
 
 from flask import Flask, request, jsonify
@@ -109,7 +121,7 @@ app = Flask(__name__)
 @app.route("/get_recommend/<id>")
 def get_recommended_courses(id):
     data = get_dataframe_ratings_base(id)
-    data = [int(x) for x in data]
+    # data = [int(x) for x in data]
 
     return jsonify(data), 200
 
