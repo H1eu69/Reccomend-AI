@@ -95,7 +95,7 @@ def get_dataframe_ratings_base(id):
 
         model = NearestNeighbors(algorithm="brute")
         model.fit(course_sparse)
-        distance, suggestion = model.kneighbors(course_pivot.iloc[course_index,:].values.reshape(1,-1), n_neighbors=9)
+        distance, suggestion = model.kneighbors(course_pivot.iloc[course_index,:].values.reshape(1,-1), n_neighbors=course_pivot.shape[0])
         suggestion_ids = []
 
         print(distance)
@@ -124,9 +124,20 @@ schedule.every(30).minutes.do(job)
 @app.route("/get_recommend/<id>")
 def get_recommended_courses(id):
     data = get_dataframe_ratings_base(id)
+    page = request.args.get('page', 1, type=int)
+    perPage = 9
+    start = (page - 1) * perPage
+    end = start + perPage
+    totalPage = (len(data) + perPage - 1) // perPage
     # data = [int(x) for x in data]
 
-    return jsonify(data), 200
+    items_on_page = data[start:end]
+    response = {
+        "data": items_on_page,
+        "total_pages": totalPage,
+        "current_page": page
+    }
+    return jsonify(response), 200
 
 @app.route('/')
 def hello_world():
