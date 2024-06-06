@@ -252,7 +252,7 @@ from flask import Flask, request, jsonify
 
 app = Flask(__name__)
 reconnectDb()
-schedule.every(15).minutes.do(reconnectDb)
+schedule.every(5).minutes.do(reconnectDb)
 
 @app.route("/get_recommend_tutors/<id>")
 def get_recommended_tutors(id):
@@ -273,7 +273,7 @@ def get_recommended_tutors(id):
     return jsonify(response), 200
 
 @app.route("/get_recommend_courses/<id>")
-def get_recommended_courses     (id):
+def get_recommended_courses(id):
     data = get_rec_course_ids_by_user(id)
     page = request.args.get('page', 1, type=int)
     perPage = 9
