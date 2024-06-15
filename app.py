@@ -9,9 +9,9 @@ def reconnectDb():
     global courses_with_rate, users, subjects, discovery, discoveries_with_subjects, discoveries_with_usrs, tutorMajor
     conn_str = (
     r"DRIVER={ODBC Driver 17 for SQL Server};"
-    r"Server=homelab-quy.duckdns.org,1433;"
-    r"Database=es_mssql;"
-    # r"TrustServerCertificate=Yes;"
+    r"Server=matthomelab.dns.army,1433;"
+    r"Database=esmssql ;"
+    r"TrustServerCertificate=Yes;"
     r"UID=SA;"
     r"PWD=1q2w3E**;"
     r"MultipleActiveResultSets=Yes;"
@@ -74,6 +74,7 @@ def reconnectDb():
 
     except Exception as e:
         print("Error connecting to database:", e)
+        reconnectDb()
 
 def get_subject_index_by_title(course_pivot, course_id):
     id = pd.to_numeric(course_id, errors='coerce', downcast='integer')
