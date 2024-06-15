@@ -321,9 +321,12 @@ def run_scheduler():
         schedule.run_pending()
         
 if __name__ == "__main__":
-    import threading
+    import threading, time
     scheduler_thread = threading.Thread(target=run_scheduler)
+    scheduler_thread.daemon = True
     scheduler_thread.start()
 
     from waitress import serve
-    serve(app, host="0.0.0.0", port=8080)
+    serve(app, host="0.0.0.0", port=6000)
+    while True:
+      time.sleep(1)
